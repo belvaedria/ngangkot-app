@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../data/models/trayek_model.dart';
 import '../../data/repositories/trayek_repository.dart';
+import '../bloc/last_viewed_trayek_bloc.dart';
+import '../bloc/last_viewed_trayek_event.dart';
 import '../maps/route_map_view.dart';
 
 class TrayekDetailPage extends StatefulWidget {
@@ -16,7 +19,6 @@ class TrayekDetailPage extends StatefulWidget {
 
 class _TrayekDetailPageState extends State<TrayekDetailPage> {
   late final TrayekRepository _repository;
-
   late TrayekModel _activeTrayek;
 
   bool _isLoadingReturn = false;
@@ -27,8 +29,11 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
     super.initState();
 
     _repository = TrayekRepository(apiClient: ApiClient());
-
     _activeTrayek = widget.initialTrayek;
+
+    context.read<LastViewedTrayekBloc>().add(
+      LastViewedTrayekUpdated(_activeTrayek),
+    );
   }
 
   Future<void> _switchDirection() async {
@@ -36,7 +41,9 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
 
     if (kodeBalik == null || kodeBalik.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data trayek balik belum tersedia.')),
+        const SnackBar(
+          content: Text('Data trayek balik belum tersedia.'),
+        ),
       );
       return;
     }
@@ -55,6 +62,10 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
         _activeTrayek = trayekBalik;
         _isLoadingReturn = false;
       });
+
+      context.read<LastViewedTrayekBloc>().add(
+        LastViewedTrayekUpdated(_activeTrayek),
+      );
     } catch (_) {
       if (!mounted) return;
 
@@ -78,7 +89,6 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
               trayek: trayek,
             ),
           ),
-
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -97,7 +107,6 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
               ),
             ),
           ),
-
           DraggableScrollableSheet(
             initialChildSize: 0.48,
             minChildSize: 0.20,
@@ -108,7 +117,9 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
               return Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: Color(0x22000000),
@@ -132,15 +143,13 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     Text(
                       trayek.namaTrayek,
-                      style: Theme.of(context).textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
-                    
                     const SizedBox(height: 24),
-
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -190,7 +199,6 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                         ),
                       ],
                     ),
-
                     if (_returnError != null) ...[
                       const SizedBox(height: 8),
                       Text(
@@ -198,11 +206,9 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                         style: const TextStyle(color: Colors.red),
                       ),
                     ],
-
                     const SizedBox(height: 24),
                     const Divider(),
                     const SizedBox(height: 16),
-
                     const Row(
                       children: [
                         Icon(Icons.route, color: Color(0xFF2563EB)),
@@ -217,7 +223,6 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
                     if (trayek.daftarJalan.isEmpty)
                       const Text('Daftar jalan belum tersedia.')
                     else
@@ -253,7 +258,6 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                           ),
                         );
                       }),
-                    // Tempat visualisasi PNG angkot.
                     Row(
                       children: [
                         Image.asset(
@@ -273,11 +277,7 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                             );
                           },
                         ),
-
-                        const SizedBox(height: 24),
-                        const Divider(),
-                        const SizedBox(height: 16),
-
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,7 +292,9 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                               const SizedBox(height: 4),
                               Text(
                                 trayek.kodeTrayek,
-                                style: TextStyle(color: Colors.grey.shade600),
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                ),
                               ),
                             ],
                           ),
@@ -333,7 +335,10 @@ class _TrayekDetailPageState extends State<TrayekDetailPage> {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                value,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
         ),

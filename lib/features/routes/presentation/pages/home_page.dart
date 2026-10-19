@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../data/models/trayek_model.dart';
+import '../bloc/last_viewed_trayek_bloc.dart';
+import '../bloc/last_viewed_trayek_state.dart';
+import 'trayek_detail_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({
@@ -36,6 +42,8 @@ class HomePage extends StatelessWidget {
             _SearchButton(onTap: onOpenJourney),
             const SizedBox(height: 16),
             _MapPreview(onTap: onOpenAngkotSekitar),
+            const SizedBox(height: 12),
+            const _LastViewedTrayekCard(),
             const SizedBox(height: 22),
             _QuickAccessSection(
               onOpenRoutes: onOpenRoutes,
@@ -209,6 +217,178 @@ class _MapPreview extends StatelessWidget {
   }
 }
 
+class _LastViewedTrayekCard extends StatelessWidget {
+  const _LastViewedTrayekCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<LastViewedTrayekBloc, LastViewedTrayekState>(
+      builder: (context, state) {
+        final trayek = state is LastViewedTrayekLoaded
+            ? state.trayek
+            : null;
+
+        return Material(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: trayek == null
+                ? null
+                : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => TrayekDetailPage(
+                          initialTrayek: trayek,
+                        ),
+                      ),
+                    );
+                  },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 13,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(color: HomePage._line),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.history_rounded,
+                    color: HomePage._blue,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: trayek == null
+                        ? const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Trayek terakhir dilihat',
+                                style: TextStyle(
+                                  color: HomePage._ink,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'Belum ada trayek yang dilihat',
+                                style: TextStyle(
+                                  color: HomePage._muted,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          )
+                        : _LastViewedTrayekInfo(trayek: trayek),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: trayek == null
+                        ? HomePage._muted
+                        : HomePage._blue,
+                    size: 21,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LastViewedTrayekInfo extends StatelessWidget {
+  const _LastViewedTrayekInfo({required this.trayek});
+
+  final TrayekModel trayek;
+
+  Color _parseTrayekColor(String value) {
+    try {
+      var hex = value.trim().replaceFirst('#', '');
+      if (hex.startsWith('0x') || hex.startsWith('0X')) {
+        hex = hex.substring(2);
+      }
+
+      if (hex.length == 6) {
+        hex = 'FF$hex';
+      }
+
+      if (hex.length == 8) {
+        return Color(int.parse(hex, radix: 16));
+      }
+    } catch (_) {
+      // Gunakan warna default jika format warna API tidak valid.
+    }
+
+    return const Color(0xFF2563EB);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final badgeColor = _parseTrayekColor(trayek.warnaAngkot);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Text(
+          'Trayek terakhir dilihat',
+          style: TextStyle(
+            color: HomePage._muted,
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: badgeColor,
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Text(
+                trayek.kodeTrayek,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                trayek.namaTrayek,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: HomePage._ink,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _QuickAccessSection extends StatelessWidget {
   const _QuickAccessSection({
     required this.onOpenRoutes,
@@ -327,7 +507,10 @@ class _QuickAction extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 2),
+          padding: const EdgeInsets.symmetric(
+            vertical: 13,
+            horizontal: 2,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

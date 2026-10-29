@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../features/routes/presentation/pages/trayek_page.dart';
 
 enum AppPage { beranda, profil, favorit, sekitar, trayek, laporan, edukasi }
@@ -12,6 +11,7 @@ class AppShellActions {
     required this.openAngkotSekitar,
     required this.loginRequired,
     required this.openEducation,
+    required this.openMenu,
   });
 
   final VoidCallback openRoutes;
@@ -19,6 +19,7 @@ class AppShellActions {
   final VoidCallback openAngkotSekitar;
   final VoidCallback loginRequired;
   final VoidCallback openEducation;
+  final VoidCallback openMenu;
 }
 
 class AppShell extends StatefulWidget {
@@ -44,7 +45,6 @@ class _AppShellState extends State<AppShell> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // NavigationRail mulai digunakan pada layar tablet.
   bool get _isTabletOrLarger => MediaQuery.sizeOf(context).width >= 600;
 
   static const _blue = Color(0xFF2563EB);
@@ -70,16 +70,27 @@ class _AppShellState extends State<AppShell> {
       icon: Icons.report_problem_outlined,
       label: 'Laporan saya',
     ),
-    (page: AppPage.edukasi, icon: Icons.menu_book_outlined, label: 'Edukasi'),
+    (
+      page: AppPage.edukasi,
+      icon: Icons.menu_book_outlined,
+      label: 'Edukasi',
+    ),
   ];
 
   AppShellActions get _homeActions => AppShellActions(
-    openRoutes: () => _selectPage(AppPage.trayek),
-    openJourney: () => _showMessage('Fitur navigasi sedang disiapkan.'),
-    openAngkotSekitar: () => _selectPage(AppPage.sekitar),
-    loginRequired: _showLoginDialog,
-    openEducation: () => _selectPage(AppPage.edukasi),
-  );
+        openRoutes: () => _selectPage(AppPage.trayek),
+        openJourney: () => _showMessage('Fitur navigasi sedang disiapkan.'),
+        openAngkotSekitar: () => _selectPage(AppPage.sekitar),
+        loginRequired: _showLoginDialog,
+        openEducation: () => _selectPage(AppPage.edukasi),
+        openMenu: _openDrawer,
+      );
+
+  void _openDrawer() {
+    if (!_isTabletOrLarger) {
+      _scaffoldKey.currentState?.openDrawer();
+    }
+  }
 
   void _selectPage(AppPage page) {
     if (page == AppPage.favorit || page == AppPage.laporan) {
@@ -105,7 +116,8 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _closeDrawerIfNeeded() {
-    if (!_isTabletOrLarger && _scaffoldKey.currentState?.isDrawerOpen == true) {
+    if (!_isTabletOrLarger &&
+        _scaffoldKey.currentState?.isDrawerOpen == true) {
       _scaffoldKey.currentState?.closeDrawer();
     }
   }
@@ -162,16 +174,24 @@ class _AppShellState extends State<AppShell> {
       );
     }
 
+    final hideGlobalAppBar =
+        _selectedPage == AppPage.beranda || _selectedPage == AppPage.trayek;
+
     return Scaffold(
       key: _scaffoldKey,
-      appBar: AppBar(
-        title: const Text(
-          'ngangkot',
-          style: TextStyle(fontWeight: FontWeight.w800),
+      appBar: hideGlobalAppBar
+          ? null
+          : AppBar(
+              title: const Text(
+                'ngangkot',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+      drawer: Drawer(
+        child: SafeArea(
+          child: _buildDrawer(),
         ),
       ),
-      // properti lainnya tetap seperti kode di atas
-      drawer: Drawer(child: SafeArea(child: _buildDrawer())),
       body: _currentPage(),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedPage == AppPage.profil ? 1 : 0,

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,6 +16,7 @@ class HomePage extends StatelessWidget {
     required this.onOpenAngkotSekitar,
     required this.onLoginRequired,
     required this.onOpenEducation,
+    required this.onOpenMenu,
   });
 
   final VoidCallback onOpenRoutes;
@@ -22,6 +24,7 @@ class HomePage extends StatelessWidget {
   final VoidCallback onOpenAngkotSekitar;
   final VoidCallback onLoginRequired;
   final VoidCallback onOpenEducation;
+  final VoidCallback onOpenMenu;
 
   static const Color _ink = Color(0xFF102A43);
   static const Color _muted = Color(0xFF667B91);
@@ -33,11 +36,11 @@ class HomePage extends StatelessWidget {
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const _WelcomeSection(),
+            _WelcomeSection(onOpenMenu: onOpenMenu),
             const SizedBox(height: 16),
             _SearchButton(onTap: onOpenJourney),
             const SizedBox(height: 16),
@@ -61,37 +64,66 @@ class HomePage extends StatelessWidget {
 }
 
 class _WelcomeSection extends StatelessWidget {
-  const _WelcomeSection();
+  const _WelcomeSection({required this.onOpenMenu});
+
+  final VoidCallback onOpenMenu;
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(2, 4, 2, 2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'WILUJENG SUMPING, USER!',
-            style: TextStyle(
-              color: HomePage._blue,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.1,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(right: 12, top: 2),
+          child: Material(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              onTap: onOpenMenu,
+              borderRadius: BorderRadius.circular(13),
+              child: const SizedBox(
+                width: 46,
+                height: 46,
+                child: Icon(
+                  Icons.menu_rounded,
+                  color: HomePage._ink,
+                  size: 25,
+                ),
+              ),
             ),
           ),
-          SizedBox(height: 7),
-          Text(
-            'Mau ke mana hari ini?',
-            style: TextStyle(
-              color: HomePage._ink,
-              fontSize: 28,
-              height: 1.12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.8,
+        ),
+        const Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(top: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'WILUJENG SUMPING, USER!',
+                  style: TextStyle(
+                    color: HomePage._blue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                SizedBox(height: 7),
+                Text(
+                  'Mau ke mana hari ini?',
+                  style: TextStyle(
+                    color: HomePage._ink,
+                    fontSize: 28,
+                    height: 1.12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -224,9 +256,8 @@ class _LastViewedTrayekCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<LastViewedTrayekBloc, LastViewedTrayekState>(
       builder: (context, state) {
-        final trayek = state is LastViewedTrayekLoaded
-            ? state.trayek
-            : null;
+        final trayek =
+            state is LastViewedTrayekLoaded ? state.trayek : null;
 
         return Material(
           color: Theme.of(context).cardColor,
